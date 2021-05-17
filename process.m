@@ -59,13 +59,30 @@ figure(2)
 for k = 1:1 % set to 1:5 or similar if you want the animation to loop.
     for n = idxs(1):idxs(end)
         clf
+        subplot(2,1,1)
+        g = gca;
+        g.Position = g.Position + [0 0.24 0 -0.2];
+        plot(t, p, '.-')
+        hold on
+        plot(t, pp, '.-')
+        line([t(n) t(n)], [0 1], 'Color', 'k')
+        hold off
+        ylabel('x')
+        xlabel('Time(s)')
+        xlim([tstart, tend])
+        ylim([min([p(idxs);pp(idxs)]), max([p(idxs);pp(idxs)])])
+        legend('Trill Centroid', 'Parabolic location', 'Current')
+        legend('Location', 'NorthEastOutside')
+        subplot(2,1,2)
+        g = gca;
+        g.Position = g.Position + [0 0 0 0.28];
         hold on
         frame = rawdata(n, :);
         x = 1:length(frame);
         pos = p(n) * x(end) + 1;
         plot(x, frame, 'Color', 'k', 'LineStyle', '-', 'Marker', '.', 'MarkerSize', 10);
         stem(pos, yend - 0.03, 'Color', 'k');
-        text(9.6, yend - 0.03, sprintf('Frame %d (time %.3f)', n, t(n)), 'FontSize', 20);
+        text(padstart, yend - 0.03, sprintf('Frame %d (time %.3f)', n, t(n)), 'FontSize', 20);
         [polyLocation, polyMax, polyX, polyY] = locationFromFrame(frame);
         plot(polyX, polyY, 'Color', 'r');
         stem(polyLocation, yend - 0.05, 'Color', 'r');
@@ -109,7 +126,7 @@ function [location, y, polyX, polyY] = locationFromFrame(frame)
     [~, M] = max(vals);
     pk = pk(M);
     polyIdx = pk - 1 : pk + 1;
-    if(length(polyIdx) < 3 || pk(1) <= 0 || pk(end) >= length(frame))
+    if(length(polyIdx) < 3 || polyIdx(1) <= 0 || polyIdx(end) >= length(frame))
         % TODO: add proper handling when we are close to the edge or
         % wraparound point
         location = 0;

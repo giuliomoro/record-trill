@@ -31,12 +31,14 @@ int main()
 	struct Frame oldFrame = {0};
 	unsigned int bits = 10;
 	unsigned int pres = 2;
+	unsigned int noiseThreshold = 40; // 40 is the default value in firmware
 #ifdef LOG_RAW
 	unsigned int multBits = 11;
 #endif // LOG_RAW
 	std::vector<struct Frame> inputs(gNumFrames);
 	Trill trill;
-	trill.setup(1, Trill::RING);
+	if(trill.setup(1, Trill::RING))
+		return 1;
 	usleep(10000);
 	trill.setScanSettings(0, bits);
 	usleep(10000);
@@ -46,6 +48,7 @@ int main()
 #ifdef LOG_RAW
 	trill.setMode(Trill::DIFF);
 	CentroidDetection cent(28, 5, 1); // Ring has 28 pads
+	cent.setNoiseThreshold(noiseThreshold / float(1 << bits)); // have to convert as if it were the value that is passed to Trill::setNoiseThreshold
 	cent.setWrapAround(5); // consider up to 5 pads when wrapping around
 	cent.setMultiplierBits(multBits);
 #endif // LOG_RAW
@@ -101,7 +104,7 @@ int main()
 #ifdef LOG_RAW
 	type = "_raw_mult" + std::to_string(multBits);
 #endif // LOG_RAW
-	std::string filename = "ring" + type + "_bits" + std::to_string(bits) + "_pres" + std::to_string(pres) + ".m";
+	std::string filename = "ring" + type + "_bits" + std::to_string(bits) + "_pres" + std::to_string(pres) + "_thr" + std::to_string(noiseThreshold) + ".m";
 	printf("Stopped, writing '%s'\n", filename.c_str());
 	std::string out = "data =[\n";
 	for(auto& f : inputs)
