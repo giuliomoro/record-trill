@@ -90,7 +90,7 @@ for k = 1:1 % set to 1:5 or similar if you want the animation to loop.
         pos = p(n) * x(end) + 1;
         plot(x, frame, 'Color', 'k', 'LineStyle', '-', 'Marker', '.', 'MarkerSize', 10);
         stem(pos, yend - 0.03, 'Color', 'k');
-        text(padstart, yend - 0.03, sprintf('Frame %d (time %.3f)', n, t(n)), 'FontSize', 20);
+        text(padstart, yend + 0.03, sprintf('Frame %d (time %.3f)', n, t(n)), 'FontSize', 20);
         [polyLocation, polyMax, polyX, polyY] = locationFromFrame(frame);
         plot(polyX, polyY, 'Color', 'r');
         stem(polyLocation, yend - 0.05, 'Color', 'r');
