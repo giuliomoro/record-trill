@@ -35,6 +35,13 @@ function [location, y, polyX, polyY, count, sz] = locationFromFrame(frame)
     endfor
     polyIdx = sort(polyIdx);
     count = length(polyIdx);
+    if 0
+      % weighted average
+      polyX = polyIdx;
+      polyY = frame(polyIdx);
+      location = sum((polyX - polyX(1) + 1) .* polyY) / sum(polyY) + polyX(1) - 1;
+      sz = sum(polyY);
+    else  % parabolic
     % ensure we have at least three pads, adding above and/or below as needed
     while length(polyIdx) < 3
       if(~doneBelow)
@@ -65,4 +72,5 @@ function [location, y, polyX, polyY, count, sz] = locationFromFrame(frame)
     [y, Mx] = max(polyY); % quick and dirty max
     location = polyX(Mx);
     sz = sum(polyY);
+    end % weighted average
 end
