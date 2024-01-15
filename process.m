@@ -1,29 +1,36 @@
-set(0, 'DefaultAxesFontSize', 18);
-% close all
+set(0, 'DefaultAxesFontSize', 13);
 
+compute = 0;
+basePlot = 0;
+animation = 1;
 % save the file from the IDE in the same folder as this file, then put
 % its filename (without .m) below so that it gets executed and it loads the
 % file's content in the `data` variable
+if compute % compute
+bar_raw_mult11_bits12_pres3_thr40
 
-ring_raw_mult11_bits10_pres2
-ring_raw_mult7_bits10_pres2
 data = data(2:end, :); % remove the first line, as it's garbage
 
 t = data(:,1); % timestamps
-p = data(:,2); % position
+p = data(:,2) * 29 / 26; % position
 s = data(:,3); % size, unused
 rawdata = data(:, 4:end); % if LOG_RAW was defined, these will be the readings from the individual pads.
-rawdata = rawdata(:, 1:28); % only 28 pads for ring
+numPads = 26;
+rawdata = rawdata(:, 1:numPads);
 
 pp = nan(size(p)); % polynomial location detection
+counts = nan(size(p));
 for n = 1 : length(pp)
-    pp(n) = (locationFromFrame(rawdata(n, :)) - 1) / 28;
+  [location, ~, ~, ~, counts(n)] = locationFromFrame(rawdata(n, :));
+  pp(n) = (location - 1) / numPads;
 end
 pprad = pp * 2 * pi;
 prad = p * 2 * pi;
+endif % compute
 %%
+if basePlot %base plot
 figure(1)
-plotSine = 1;
+plotSine = 0;
 if(plotSine)
     plot(t, sin(prad), '.-')
     hold on
@@ -32,9 +39,10 @@ if(plotSine)
     ylim([0 1])
     ylabel('sin(2\pi x)')
 else
-    plot(t, p, '.-')
+    T = 1:length(t);
+    plot(T, p, '.-')
     hold on
-    plot(t, pp, '.-')
+    plot(T, pp, '.-')
     hold off
     ylim([0 1])
     ylabel('x')
@@ -42,17 +50,18 @@ end
 title('Temporal evolution')
 xlabel('Time(s)')
 legend('Trill Centroid', 'Parabolic location')
+end % base plot
 %%
-if 1 % animation:
+if animation % animation:
 % manually set the ranges of an interval (in seconds) that you want to
 % compare
-tstart = 4.9;
-tend = 5;
+tstart = 2;
+tend = 2.4;
 % also set what pads and vertical ranges to focus on
-padstart = 10;
-padend = 16;
+padstart = 16;
+padend = 24;
 ystart = 0;
-yend = 0.55;
+yend = 1;
 idxs = find(t > tstart & t < tend);
 
 figure(2)
@@ -60,8 +69,7 @@ for k = 1:1 % set to 1:5 or similar if you want the animation to loop.
     for n = idxs(1):idxs(end)
         clf
         subplot(2,1,1)
-        g = gca;
-        g.Position = g.Position + [0 0.24 0 -0.2];
+%        set(gca, 'Position', get(gca, 'Position') + [0 0.24 0 -0.2])
         plot(t, p, '.-')
         hold on
         plot(t, pp, '.-')
@@ -74,8 +82,7 @@ for k = 1:1 % set to 1:5 or similar if you want the animation to loop.
         legend('Trill Centroid', 'Parabolic location', 'Current')
         legend('Location', 'NorthEastOutside')
         subplot(2,1,2)
-        g = gca;
-        g.Position = g.Position + [0 0 0 0.28];
+%        set(gca, 'Position', get(gca, 'Position') + [0 0 0 0.28])
         hold on
         frame = rawdata(n, :);
         x = 1:length(frame);
@@ -88,20 +95,21 @@ for k = 1:1 % set to 1:5 or similar if you want the animation to loop.
         stem(polyLocation, yend - 0.05, 'Color', 'r');
 
         legend('readings', 'centroid', 'parabolic fit', 'parabolic max')
-        legend('Location', 'West')
+        legend('Location', 'NorthEastOutside')
         xlim([padstart - 0.5, padend + 0.5])
         ylim([ystart, yend])
-        set(gca, 'XTick', padstart : padend)
+ %       set(gca, 'XTick', padstart : padend)
         xlabel('Pad')
         ylabel('Activation(rel)')
         hold off
         % uncomment this to export each frame as an image
-        % print('-dpng', '-r100', sprintf('frame %d', n))
-        pause(0)
+        print('-dpng', '-r100', sprintf('frame_%d', n))
     end
 end
 end % if animation
 %%
+
+if 0
 figure(3)
 plot(p, sin(prad), '.')
 title('Mapping x to sin(x)')
@@ -109,7 +117,8 @@ xlim([0 1])
 ylim([-1 1])
 xlabel('x Position (relative)')
 ylabel('sin(2\pi x)')
-
+end
+if 0
 % % "Trill touch locations (between 0 & 1) plotted against the diff(y-coordinates)." (actually the other way around)
 figure(4)
 plot(p(1:end-1), diff(sin(prad)), '.-')
@@ -119,25 +128,4 @@ ylim([-0.2 0.2])
 xlabel('x Position (relative)')
 ylabel('\Delta sin(2\pi x)')
 % xlim([0 1])
-
-function [location, y, polyX, polyY] = locationFromFrame(frame)
-    [vals, pk] = findpeaks(frame);
-    % use highest peak only (only one touch will be detected)
-    [~, M] = max(vals);
-    pk = pk(M);
-    polyIdx = pk - 1 : pk + 1;
-    if(length(polyIdx) < 3 || polyIdx(1) <= 0 || polyIdx(end) >= length(frame))
-        % TODO: add proper handling when we are close to the edge or
-        % wraparound point
-        location = 0;
-        y = 0;
-        polyX = 0;
-        polyY = 0;
-        return;
-    end
-    polyX = polyIdx(1) : 0.001 : polyIdx(end);
-    P = polyfit(polyIdx, frame(polyIdx), 2);
-    polyY = polyval(P, polyX);
-    [y, Mx] = max(polyY); % quick and dirty max
-    location = polyX(Mx);
 end
