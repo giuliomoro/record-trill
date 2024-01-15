@@ -1,4 +1,4 @@
-function [location, y, polyX, polyY, count] = locationFromFrame(frame)
+function [location, y, polyX, polyY, count, sz] = locationFromFrame(frame)
     [vals, pk] = myfindpeaks(frame);
     if length(pk) < 1
       location = 0;
@@ -6,6 +6,7 @@ function [location, y, polyX, polyY, count] = locationFromFrame(frame)
       polyX = 0;
       polyY = 0;
       count = 0;
+      sz = 0;
       return;
     endif
     % use highest peak only (only one touch will be detected)
@@ -63,4 +64,5 @@ function [location, y, polyX, polyY, count] = locationFromFrame(frame)
     polyY = polyval(P, polyX);
     [y, Mx] = max(polyY); % quick and dirty max
     location = polyX(Mx);
+    sz = sum(polyY);
 end

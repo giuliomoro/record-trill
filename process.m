@@ -20,8 +20,9 @@ rawdata = rawdata(:, 1:numPads);
 
 pp = nan(size(p)); % polynomial location detection
 counts = nan(size(p));
+szs = nan(size(p));
 for n = 1 : length(pp)
-  [location, ~, ~, ~, counts(n)] = locationFromFrame(rawdata(n, :));
+  [location, ~, ~, ~, counts(n), szs(n)] = locationFromFrame(rawdata(n, :));
   pp(n) = (location - 1) / numPads;
 end
 pprad = pp * 2 * pi;
