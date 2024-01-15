@@ -14,7 +14,7 @@ data = data(2:end, :); % remove the first line, as it's garbage
 t = data(:,1); % timestamps
 p = data(:,2) * 29 / 26; % position
 s = data(:,3); % size, unused
-rawdata = data(:, 4:end); % if LOG_RAW was defined, these will be the readings from the individual pads.
+rawdata = max(0, data(:, 4:end) - 40/4096); % if LOG_RAW was defined, these will be the readings from the individual pads.
 numPads = 26;
 rawdata = rawdata(:, 1:numPads);
 
